@@ -197,6 +197,7 @@
             transition: filter 0.1s ease;
             filter: drop-shadow(0 2px 3px rgba(0,0,0,0.2));
             touch-action: manipulation;
+            pointer-events: all;
         }
         .leaf-unit:active {
             filter: drop-shadow(0 0 8px #ffffb0);
@@ -366,8 +367,10 @@
                 group.appendChild(path);
                 group.appendChild(vein);
                 group.setAttribute("class", "leaf-unit");
+                group.setAttribute("data-leaf-idx", this.idx);
                 group.style.cursor = "pointer";
-                group.style.pointerEvents = "bounding-box";
+                group.style.touchAction = "manipulation";
+                group.style.pointerEvents = "auto";
                 this.group = group;
                 this.leafPath = path;
                 this.veinElem = vein;
@@ -488,10 +491,6 @@
             for (let i = 0; i < LEAVES_CONFIG.length; i++) {
                 const agent = new LeafAgent(i, LEAVES_CONFIG[i]);
                 const leafGroup = agent.createLeafElement();
-                leafGroup.addEventListener("click", (event) => {
-                    event.stopPropagation();
-                    handleLeafCut(agent);
-                });
                 leavesContainer.appendChild(leafGroup);
                 newAgents.push(agent);
             }
@@ -648,6 +647,91 @@
         svg.insertBefore(defs, svg.firstChild);
         initPollen();
         
+        // ----- ОБРАБОТЧИК СОБЫТИЙ ЛИСТЬЕВ НА SVG -----
+        let lastTapLeafTime = 0;
+        svg.addEventListener('pointerdown', (event) => {
+            if (event.pointerType === 'mouse') return; // только touch и pen
+            
+            const now = performance.now();
+            if (now - lastTapLeafTime < 250) return;
+            
+            let target = event.target;
+            let leafGroup = null;
+            for (let i = 0; i < 5; i++) {
+                if (!target) break;
+                if (target.hasAttribute?.('data-leaf-idx')) {
+                    leafGroup = target;
+                    break;
+                }
+                target = target.parentNode;
+            }
+            
+            if (leafGroup) {
+                lastTapLeafTime = now;
+                event.preventDefault();
+                const idx = parseInt(leafGroup.getAttribute('data-leaf-idx'));
+                if (leafAgents[idx]) {
+                    handleLeafCut(leafAgents[idx]);
+                }
+            }
+        }, { passive: false });
+
+        svg.addEventListener('touchstart', (event) => {
+            const now = performance.now();
+            if (now - lastTapLeafTime < 250) return;
+            
+            const touch = event.touches[0];
+            const svgRect = svg.getBoundingClientRect();
+            const svgPos = new DOMPoint(
+                (touch.clientX - svgRect.left) * (700 / svgRect.width),
+                (touch.clientY - svgRect.top) * (550 / svgRect.height)
+            );
+
+            let leafGroup = null;
+            for (let leaf of leafAgents) {
+                if (leaf.removed || !leaf.group || !leaf.group.parentNode) continue;
+                const bbox = leaf.group.getBBox();
+                const leafMatrix = leaf.group.getScreenCTM();
+                const pt = svg.createSVGPoint();
+                pt.x = svgPos.x;
+                pt.y = svgPos.y;
+                const invMatrix = leafMatrix.inverse();
+                const localPt = pt.matrixTransform(invMatrix);
+                
+                if (localPt.x >= bbox.x && localPt.x <= bbox.x + bbox.width &&
+                    localPt.y >= bbox.y && localPt.y <= bbox.y + bbox.height) {
+                    leafGroup = leaf;
+                    break;
+                }
+            }
+
+            if (leafGroup) {
+                lastTapLeafTime = now;
+                event.preventDefault();
+                handleLeafCut(leafGroup);
+            }
+        }, { passive: false });
+
+        svg.addEventListener('click', (event) => {
+            let target = event.target;
+            let leafGroup = null;
+            for (let i = 0; i < 5; i++) {
+                if (!target) break;
+                if (target.hasAttribute?.('data-leaf-idx')) {
+                    leafGroup = target;
+                    break;
+                }
+                target = target.parentNode;
+            }
+            
+            if (leafGroup) {
+                const idx = parseInt(leafGroup.getAttribute('data-leaf-idx'));
+                if (leafAgents[idx]) {
+                    handleLeafCut(leafAgents[idx]);
+                }
+            }
+        });
+
         // ----- АНИМАЦИЯ -----
         let previousTime = performance.now();
         function animate(currentTime) {
