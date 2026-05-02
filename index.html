@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-    <title>5 листьев: найди секретный | Telegram Mini Game</title>
+    <title>3 листа: найди секретный | Telegram Mini Game</title>
     <style>
         * {
             margin: 0;
@@ -13,14 +13,20 @@
             -webkit-tap-highlight-color: transparent;
         }
 
+        html, body {
+            width: 100%;
+            min-height: 100%;
+        }
+
         body {
             background: linear-gradient(145deg, #c8e8bf 0%, #b2d8a8 100%);
             font-family: 'Segoe UI', 'Quicksand', system-ui, -apple-system, 'Poppins', sans-serif;
-            padding: 12px;
+            padding: calc(12px + env(safe-area-inset-top, 0px)) calc(12px + env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) calc(12px + env(safe-area-inset-left, 0px));
             min-height: 100vh;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
+            touch-action: manipulation;
         }
 
         /* Контейнер с отступами под динамическую область */
@@ -34,6 +40,7 @@
             backdrop-filter: blur(2px);
             padding: 16px 16px 20px 16px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            min-height: calc(100vh - 64px);
         }
 
         /* Игровая панель (верхняя) – адаптивная, не перекрывает контент */
@@ -196,28 +203,49 @@
             transform: scale(0.98);
         }
 
-        /* Медиа-запросы для очень маленьких экранов (ширина до 480px) */
+        /* Медиа-запросы для очень маленьких экранов (ширина до 520px) */
         @media (max-width: 520px) {
             .game-wrapper {
                 padding: 12px;
+                min-height: auto;
             }
             .game-panel {
-                padding: 8px 12px;
+                padding: 10px 12px;
+                flex-direction: column;
+                align-items: stretch;
             }
-            .stat-value {
-                font-size: 1rem;
-                min-width: 50px;
+            .stats {
+                justify-content: center;
+                width: 100%;
+            }
+            .buttons {
+                width: 100%;
+                justify-content: center;
             }
             .game-btn {
-                padding: 5px 10px;
-                font-size: 0.7rem;
+                padding: 8px 10px;
+                font-size: 0.75rem;
+                width: 100%;
+                min-width: 0;
             }
             .message-area {
-                font-size: 0.65rem;
-                padding: 6px 10px;
+                font-size: 0.72rem;
+                padding: 8px 10px;
+                order: 1;
+                width: 100%;
+            }
+            .svg-container {
+                margin: 10px 0 8px;
             }
             .info-panel {
                 font-size: 0.65rem;
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .title,
+            .badge {
+                width: 100%;
+                text-align: center;
             }
         }
     </style>
@@ -256,7 +284,7 @@
     </div>
 
     <div class="info-panel">
-        <span class="title">🌿 5 ЛИСТЬЕВ · НАЙДИ СЕКРЕТНЫЙ</span>
+        <span class="title">🌿 3 ЛИСТА · НАЙДИ СЕКРЕТНЫЙ</span>
         <span class="badge">🍃 ветер + рост | х2 при победе</span>
     </div>
     <footer>💡 Клик по листу = срез. Цена падает после ошибки. Угадал → выигрыш = цена×2.</footer>
@@ -295,13 +323,11 @@
 
         const MIN_PRICE = 10;
         
-        // ----- 5 ЛИСТЬЕВ (конфигурация) -----
+        // ----- 3 ЛИСТА (конфигурация) -----
         const LEAVES_CONFIG = [
-            { fraction: 0.18, sideSign: 1,  baseAngleDeg: 28, variation: 4 },
-            { fraction: 0.36, sideSign: -1, baseAngleDeg: 32, variation: -6 },
-            { fraction: 0.55, sideSign: 1,  baseAngleDeg: 34, variation: 5 },
-            { fraction: 0.74, sideSign: -1, baseAngleDeg: 30, variation: -8 },
-            { fraction: 0.92, sideSign: 1,  baseAngleDeg: 25, variation: 3 }
+            { fraction: 0.22, sideSign: 1,  baseAngleDeg: 28, variation: 3 },
+            { fraction: 0.52, sideSign: -1, baseAngleDeg: 34, variation: -5 },
+            { fraction: 0.82, sideSign: 1,  baseAngleDeg: 30, variation: 4 }
         ];
 
         // ----- КЛАСС ЛИСТА -----
@@ -360,13 +386,42 @@
             gameMsgDiv.innerHTML = isError ? `⚠️ ${text}` : `🌿 ${text}`;
             setTimeout(() => {
                 if (gameMsgDiv.innerHTML.includes(text)) {
-                    if(gameActive) gameMsgDiv.innerHTML = "🍃 5 листьев. Кликни на лист — угадай главный! Цена падает при промахе.";
+                    if(gameActive) gameMsgDiv.innerHTML = "🍃 3 листа. Кликни на лист — угадай главный! Цена падает при промахе.";
                     else if(!gameActive && winAmount>0) gameMsgDiv.innerHTML = "🏆 ПОБЕДА! Нажми «ВЫВЕСТИ» для получения приза.";
                     else gameMsgDiv.innerHTML = "🌿 Игра завершена. Нажми «НОВАЯ».";
                 }
             }, 1800);
         }
-        
+
+        function playWinEffect(leaf) {
+            if (!leaf.group) return;
+            const burst = document.createElementNS(SVG_NS, "circle");
+            burst.setAttribute("cx", "22");
+            burst.setAttribute("cy", "0");
+            burst.setAttribute("r", "0");
+            burst.setAttribute("fill", "none");
+            burst.setAttribute("stroke", "#fff8b0");
+            burst.setAttribute("stroke-width", "3");
+            burst.setAttribute("opacity", "0.95");
+            burst.setAttribute("filter", "url(#glow)");
+            leaf.group.insertBefore(burst, leaf.leafPath);
+
+            const currentTransform = leaf.group.getAttribute("transform") || "";
+            leaf.group.animate([
+                { transform: currentTransform },
+                { transform: `${currentTransform} scale(1.08)` }
+            ], { duration: 220, easing: "ease-out", fill: "forwards" });
+
+            burst.animate([
+                { r: "0", opacity: "0.95", strokeWidth: "3" },
+                { r: "30", opacity: "0", strokeWidth: "0" }
+            ], { duration: 260, easing: "ease-out", fill: "forwards" });
+
+            setTimeout(() => {
+                if (burst.parentNode) burst.parentNode.removeChild(burst);
+            }, 260);
+        }
+
         // ----- ОБРАБОТКА КЛИКА ПО ЛИСТУ -----
         function handleLeafCut(leaf) {
             if (!gameActive) {
@@ -391,11 +446,12 @@
                 gameActive = false;
                 updateUI();
                 showMessage(`✨ ПОБЕДА! Вы срезали секретный лист! Выигрыш: ${prize}₽ доступен к выводу. ✨`);
+                playWinEffect(leaf);
                 if (leaf.group && leaf.group.parentNode) {
-                    leaf.group.style.transition = "transform 0.1s ease, opacity 0.15s";
+                    leaf.group.style.transition = "opacity 0.18s ease, transform 0.18s ease";
                     leaf.group.style.opacity = "0";
-                    leaf.group.style.transform = "scale(0.1) rotate(-20deg)";
-                    setTimeout(() => { if(leaf.group && leaf.group.parentNode) leaf.group.remove(); }, 120);
+                    leaf.group.style.transform = "scale(0.1) rotate(-30deg)";
+                    setTimeout(() => { if(leaf.group && leaf.group.parentNode) leaf.group.remove(); }, 180);
                 }
                 leaf.removed = true;
                 updateUI();
