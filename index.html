@@ -2,194 +2,248 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>5 листьев: найди секретный | Экономическая игра-кликер</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <title>5 листьев: найди секретный | Telegram Mini Game</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
             background: linear-gradient(145deg, #c8e8bf 0%, #b2d8a8 100%);
+            font-family: 'Segoe UI', 'Quicksand', system-ui, -apple-system, 'Poppins', sans-serif;
+            padding: 12px;
             min-height: 100vh;
             display: flex;
-            justify-content: center;
             align-items: center;
-            font-family: 'Segoe UI', 'Quicksand', system-ui, -apple-system, 'Poppins', sans-serif;
-            padding: 20px;
-            margin: 0;
+            justify-content: center;
         }
 
-        .demo-container {
+        /* Контейнер с отступами под динамическую область */
+        .game-wrapper {
+            width: 100%;
+            max-width: 550px;
+            margin: 0 auto;
             position: relative;
             background: rgba(40, 28, 12, 0.2);
-            border-radius: 64px;
+            border-radius: 32px;
             backdrop-filter: blur(2px);
-            padding: 20px 30px 30px 30px;
-            box-shadow: 0 20px 35px rgba(0, 0, 0, 0.2), inset 0 1px 2px rgba(255,255,240,0.6);
+            padding: 16px 16px 20px 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
         }
 
-        /* Игровая панель управления */
+        /* Игровая панель (верхняя) – адаптивная, не перекрывает контент */
         .game-panel {
-            position: absolute;
-            top: 20px;
-            left: 30px;
-            right: 30px;
             background: #1a2a0cee;
             backdrop-filter: blur(10px);
-            border-radius: 60px;
-            padding: 10px 20px;
+            border-radius: 48px;
+            padding: 10px 16px;
             display: flex;
             flex-wrap: wrap;
             justify-content: space-between;
             align-items: center;
-            gap: 12px;
-            z-index: 25;
+            gap: 10px;
+            margin-bottom: 18px;
             border: 1px solid #e9ffb0;
-            box-shadow: 0 8px 18px rgba(0,0,0,0.2);
-            font-weight: bold;
+            box-shadow: 0 5px 12px rgba(0,0,0,0.2);
         }
+
         .stats {
             display: flex;
-            gap: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
             background: #00000050;
-            padding: 5px 18px;
+            padding: 6px 12px;
             border-radius: 40px;
             backdrop-filter: blur(4px);
         }
+
         .stat {
             color: #fdf7cf;
             font-family: monospace;
-            font-size: 1.1rem;
+            font-size: 0.85rem;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: baseline;
+            gap: 6px;
         }
+
         .stat span:first-child {
-            font-size: 0.8rem;
+            font-size: 0.7rem;
             opacity: 0.9;
         }
+
         .stat-value {
-            font-size: 1.4rem;
+            font-size: 1.2rem;
             font-weight: 800;
-            margin-left: 8px;
             background: #2f4a1d;
-            padding: 2px 12px;
+            padding: 2px 10px;
             border-radius: 32px;
             color: #fff3b7;
+            min-width: 60px;
+            text-align: center;
         }
+
         .buttons {
             display: flex;
-            gap: 10px;
+            gap: 8px;
+            flex-wrap: wrap;
         }
+
         .game-btn {
             background: #f9e7a3;
             border: none;
-            padding: 6px 16px;
+            padding: 6px 14px;
             border-radius: 40px;
             font-weight: bold;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             cursor: pointer;
             transition: 0.1s linear;
             color: #2c461c;
-            box-shadow: 0 2px 4px black;
+            box-shadow: 0 1px 3px black;
         }
+
         .game-btn:active {
             transform: scale(0.97);
         }
+
         .game-btn.special {
             background: #ffd966;
             color: #2a521a;
         }
+
         .message-area {
             background: #2b3b1bd9;
             border-radius: 32px;
-            padding: 8px 18px;
-            font-size: 0.75rem;
+            padding: 8px 14px;
+            font-size: 0.7rem;
             color: #fffeca;
-            max-width: 260px;
             backdrop-filter: blur(4px);
+            flex: 1;
+            min-width: 130px;
+            text-align: center;
+        }
+
+        /* SVG – адаптивный, максимальная ширина, высота авто */
+        .svg-container {
+            text-align: center;
+            margin: 12px 0 8px;
         }
 
         svg {
-            display: block;
-            margin: 0 auto;
-            border-radius: 40px;
+            max-width: 100%;
+            height: auto;
+            display: inline-block;
+            border-radius: 28px;
             background: radial-gradient(circle at 30% 20%, #eafbcf, #b9dc9a);
-            box-shadow: 0 12px 28px rgba(0,0,0,0.2), inset 0 1px 4px rgba(255,255,210,0.8);
-            cursor: crosshair;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            cursor: pointer;
+            width: 100%;
+            touch-action: manipulation;
         }
 
+        /* Нижняя панель информации */
         .info-panel {
             display: flex;
             justify-content: space-between;
             align-items: baseline;
-            margin-top: 18px;
-            gap: 16px;
+            margin-top: 14px;
+            gap: 8px;
             flex-wrap: wrap;
             background: #2a3b1fe0;
             backdrop-filter: blur(8px);
-            padding: 10px 20px;
-            border-radius: 80px;
+            padding: 8px 16px;
+            border-radius: 40px;
             color: #f9f2cf;
-            text-shadow: 0 1px 1px #1f2f0e;
+            font-size: 0.7rem;
         }
 
         .title {
             font-weight: 700;
-            letter-spacing: 1px;
             background: #fef7cf30;
-            padding: 4px 16px;
-            border-radius: 50px;
-            font-size: 0.9rem;
+            padding: 4px 12px;
+            border-radius: 40px;
         }
 
         .badge {
             font-family: monospace;
             background: #1c2a0e;
-            padding: 5px 14px;
+            padding: 4px 10px;
             border-radius: 32px;
-            font-size: 0.7rem;
         }
 
         footer {
-            font-size: 0.65rem;
+            font-size: 0.6rem;
             text-align: center;
             margin-top: 12px;
             color: #2a401d;
             font-weight: 500;
         }
+
+        /* Листья – увеличиваем зону клика для мобильных */
         .leaf-unit {
-            transition: filter 0.1s ease;
-            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.1));
             cursor: pointer;
+            transition: filter 0.1s ease;
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.2));
+            touch-action: manipulation;
         }
-        .leaf-unit:hover {
+        .leaf-unit:active {
             filter: drop-shadow(0 0 8px #ffffb0);
+            transform: scale(0.98);
+        }
+
+        /* Медиа-запросы для очень маленьких экранов (ширина до 480px) */
+        @media (max-width: 520px) {
+            .game-wrapper {
+                padding: 12px;
+            }
+            .game-panel {
+                padding: 8px 12px;
+            }
+            .stat-value {
+                font-size: 1rem;
+                min-width: 50px;
+            }
+            .game-btn {
+                padding: 5px 10px;
+                font-size: 0.7rem;
+            }
+            .message-area {
+                font-size: 0.65rem;
+                padding: 6px 10px;
+            }
+            .info-panel {
+                font-size: 0.65rem;
+            }
         }
     </style>
 </head>
 <body>
-<div>
-    <div class="demo-container">
-        <!-- Игровая панель -->
-        <div class="game-panel">
-            <div class="stats">
-                <div class="stat">💰 БАЛАНС: <span class="stat-value" id="balanceValue">100</span> ₽</div>
-                <div class="stat">✂️ ЦЕНА СРЕЗА: <span class="stat-value" id="currentPrice">100</span> ₽</div>
-                <div class="stat">🏆 ВЫИГРЫШ: <span class="stat-value" id="winningAmount">0</span> ₽</div>
-            </div>
-            <div class="buttons">
-                <button class="game-btn" id="depositBtn">➕ ПОПОЛНИТЬ 100₽</button>
-                <button class="game-btn special" id="withdrawBtn" disabled>💸 ВЫВЕСТИ</button>
-                <button class="game-btn" id="resetGameBtn">🔄 НОВАЯ ИГРА</button>
-            </div>
-            <div class="message-area" id="gameMessage">
-                🌿 Всего 5 листьев. Найди особый! Цена среза падает после каждой ошибки.
-            </div>
+<div class="game-wrapper">
+    <!-- Верхняя панель с балансом и кнопками -->
+    <div class="game-panel">
+        <div class="stats">
+            <div class="stat">💰 <span>БАЛАНС</span> <span class="stat-value" id="balanceValue">100</span> ₽</div>
+            <div class="stat">✂️ <span>ЦЕНА</span> <span class="stat-value" id="currentPrice">100</span> ₽</div>
+            <div class="stat">🏆 <span>ВЫИГРЫШ</span> <span class="stat-value" id="winningAmount">0</span> ₽</div>
         </div>
+        <div class="buttons">
+            <button class="game-btn" id="depositBtn">➕ ПОПОЛНИТЬ 100₽</button>
+            <button class="game-btn special" id="withdrawBtn" disabled>💸 ВЫВЕСТИ</button>
+            <button class="game-btn" id="resetGameBtn">🔄 НОВАЯ</button>
+        </div>
+        <div class="message-area" id="gameMessage">
+            🌿 Найди особый лист! Цена падает после промаха.
+        </div>
+    </div>
 
-        <svg id="plantSvg" width="700" height="550" viewBox="0 0 700 550" xmlns="http://www.w3.org/2000/svg">
+    <!-- SVG контейнер -->
+    <div class="svg-container">
+        <svg id="plantSvg" viewBox="0 0 700 550" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
             <rect x="0" y="520" width="700" height="30" fill="#7d5d3a" opacity="0.35" rx="12" />
             <ellipse cx="350" cy="518" rx="130" ry="12" fill="#4f3a1f" opacity="0.4" />
             <g id="stemGroup">
@@ -199,17 +253,18 @@
             <g id="leavesContainer"></g>
             <g id="pollenGroup" opacity="0.7"></g>
         </svg>
-        <div class="info-panel">
-            <span class="title">🌿 5 ЛИСТЬЕВ · ИГРА «НАЙДИ СЕКРЕТНЫЙ»</span>
-            <span class="badge">🍃 пружинистый ветер | рост + ставка х2 при победе</span>
-        </div>
-        <footer>💡 Правила: 1) каждый неверный срез удешевляет след. попытку на 10₽ (минимум 10₽). 2) Угадал нужный лист → выигрыш = цена_среза × 2 (доступен к выводу). 3) Игра заканчивается после победы.</footer>
     </div>
+
+    <div class="info-panel">
+        <span class="title">🌿 5 ЛИСТЬЕВ · НАЙДИ СЕКРЕТНЫЙ</span>
+        <span class="badge">🍃 ветер + рост | х2 при победе</span>
+    </div>
+    <footer>💡 Клик по листу = срез. Цена падает после ошибки. Угадал → выигрыш = цена×2.</footer>
 </div>
 
 <script>
     (function() {
-        // ----------------------------- SVG И СТЕБЕЛЬ ---------------------------------
+        // ----------------------------- ИНИЦИАЛИЗАЦИЯ -----------------------------
         const SVG_NS = "http://www.w3.org/2000/svg";
         const svg = document.getElementById("plantSvg");
         let leavesContainer = document.getElementById("leavesContainer");
@@ -221,7 +276,7 @@
         const MIN_STEM_LEN = 15;
         const MAX_STEM_LEN = 280;
 
-        // ----- ИГРОВЫЕ ПЕРЕМЕННЫЕ -----
+        // ----- ИГРОВЫЕ ПАРАМЕТРЫ -----
         let balance = 100;
         let currentCutPrice = 100;
         let winAmount = 0;
@@ -229,7 +284,7 @@
         let winningLeafIndex = -1;
         let leafAgents = [];
         
-        // DOM-элементы
+        // DOM
         const balanceSpan = document.getElementById("balanceValue");
         const priceSpan = document.getElementById("currentPrice");
         const winSpan = document.getElementById("winningAmount");
@@ -240,13 +295,13 @@
 
         const MIN_PRICE = 10;
         
-        // ----- КОНФИГУРАЦИЯ ТОЛЬКО 5 ЛИСТЬЕВ (равномерно по стеблю) -----
+        // ----- 5 ЛИСТЬЕВ (конфигурация) -----
         const LEAVES_CONFIG = [
-            { fraction: 0.18, sideSign: 1,  baseAngleDeg: 28, variation: 4 },   // нижний правый
-            { fraction: 0.36, sideSign: -1, baseAngleDeg: 32, variation: -6 },  // левый ниже середины
-            { fraction: 0.55, sideSign: 1,  baseAngleDeg: 34, variation: 5 },   // правый средний
-            { fraction: 0.74, sideSign: -1, baseAngleDeg: 30, variation: -8 },  // левый верхний
-            { fraction: 0.92, sideSign: 1,  baseAngleDeg: 25, variation: 3 }     // верхушка правый
+            { fraction: 0.18, sideSign: 1,  baseAngleDeg: 28, variation: 4 },
+            { fraction: 0.36, sideSign: -1, baseAngleDeg: 32, variation: -6 },
+            { fraction: 0.55, sideSign: 1,  baseAngleDeg: 34, variation: 5 },
+            { fraction: 0.74, sideSign: -1, baseAngleDeg: 30, variation: -8 },
+            { fraction: 0.92, sideSign: 1,  baseAngleDeg: 25, variation: 3 }
         ];
 
         // ----- КЛАСС ЛИСТА -----
@@ -255,7 +310,6 @@
                 this.idx = idx;
                 this.fraction = config.fraction;
                 this.fullBaseAngle = config.sideSign * (config.baseAngleDeg + config.variation);
-                // фазы появления / раскрытия (подстроены под 5 листьев)
                 this.emergeStart = 0.1 + (idx * 0.07);
                 this.emergeEnd = this.emergeStart + 0.32;
                 this.emergeStart = Math.min(this.emergeStart, 0.68);
@@ -275,7 +329,7 @@
                 path.setAttribute("d", "M0,0 C12,-18 32,-22 44,-12 C52,-4 52,8 44,14 C32,24 12,20 0,0 Z");
                 path.setAttribute("fill", "#73b33b");
                 path.setAttribute("stroke", "#3c791a");
-                path.setAttribute("stroke-width", "0.9");
+                path.setAttribute("stroke-width", "1");
                 path.setAttribute("stroke-linejoin", "round");
                 const vein = document.createElementNS(SVG_NS, "path");
                 vein.setAttribute("d", "M4,0 Q22,-6 38,-4 M4,2 Q22,8 40,6");
@@ -295,16 +349,11 @@
             }
         }
         
-        // ---------- UI ОБНОВЛЕНИЕ ----------
         function updateUI() {
             balanceSpan.textContent = Math.floor(balance);
             priceSpan.textContent = currentCutPrice;
             winSpan.textContent = winAmount;
-            if (!gameActive && winAmount > 0) {
-                withdrawBtn.disabled = false;
-            } else {
-                withdrawBtn.disabled = true;
-            }
+            withdrawBtn.disabled = !(!gameActive && winAmount > 0);
         }
         
         function showMessage(text, isError = false) {
@@ -313,15 +362,15 @@
                 if (gameMsgDiv.innerHTML.includes(text)) {
                     if(gameActive) gameMsgDiv.innerHTML = "🍃 5 листьев. Кликни на лист — угадай главный! Цена падает при промахе.";
                     else if(!gameActive && winAmount>0) gameMsgDiv.innerHTML = "🏆 ПОБЕДА! Нажми «ВЫВЕСТИ» для получения приза.";
-                    else gameMsgDiv.innerHTML = "🌿 Игра завершена. Нажми «НОВАЯ ИГРА».";
+                    else gameMsgDiv.innerHTML = "🌿 Игра завершена. Нажми «НОВАЯ».";
                 }
             }, 1800);
         }
         
-        // ----- ИГРОВАЯ ЛОГИКА СРЕЗА -----
+        // ----- ОБРАБОТКА КЛИКА ПО ЛИСТУ -----
         function handleLeafCut(leaf) {
             if (!gameActive) {
-                showMessage("Игра уже завершена. Начните новую!", true);
+                showMessage("Игра завершена. Начните новую!", true);
                 return;
             }
             if (leaf.removed) {
@@ -337,7 +386,6 @@
             balance -= currentCutPrice;
             
             if (isWinning) {
-                // ПОБЕДА: выигрыш = цена_среза * 2
                 const prize = currentCutPrice * 2;
                 winAmount = prize;
                 gameActive = false;
@@ -354,7 +402,7 @@
                 return;
             } 
             
-            // НЕВЕРНЫЙ ЛИСТ: списание произошло, удаляем лист, цена падает на 10₽
+            // Неверный лист
             leaf.removed = true;
             if (leaf.group && leaf.group.parentNode) {
                 leaf.group.style.transition = "transform 0.08s ease, opacity 0.12s";
@@ -367,24 +415,19 @@
             if (newPrice < MIN_PRICE) newPrice = MIN_PRICE;
             currentCutPrice = newPrice;
             updateUI();
-            showMessage(`Не угадал! Лист срезан. Цена снижена до ${currentCutPrice}₽. Осталось баланс: ${Math.floor(balance)}₽`);
+            showMessage(`Не угадал! Цена снижена до ${currentCutPrice}₽. Осталось: ${Math.floor(balance)}₽`);
             
-            // Проверка: если все листья срезаны, а победный остался — игра проиграна? (формально можно завершить, но пусть игрок продолжает без листьев? такого не должно быть)
             const aliveLeaves = leafAgents.filter(l => !l.removed);
             if (aliveLeaves.length === 0 && gameActive) {
-                // Хотя победный лист ещё существует, но вдруг ошибка — завершаем игру без выигрыша
-                showMessage("Закончились листья, но вы не нашли секретный :( Новая игра.", true);
+                showMessage("Листья кончились, а секретный так и не найден :( Начните новую игру.", true);
                 gameActive = false;
                 updateUI();
             }
         }
         
-        // ----- ПЕРЕСОЗДАНИЕ ЛИСТЬЕВ И НОВАЯ ИГРА -----
+        // ----- ПЕРЕСОЗДАНИЕ ЛИСТЬЕВ -----
         function rebuildLeavesAndGame(resetBalanceAndPrice = true) {
-            // Очищаем контейнер
-            while (leavesContainer.firstChild) {
-                leavesContainer.removeChild(leavesContainer.firstChild);
-            }
+            while (leavesContainer.firstChild) leavesContainer.removeChild(leavesContainer.firstChild);
             const newAgents = [];
             for (let i = 0; i < LEAVES_CONFIG.length; i++) {
                 const agent = new LeafAgent(i, LEAVES_CONFIG[i]);
@@ -397,8 +440,6 @@
                 newAgents.push(agent);
             }
             leafAgents = newAgents;
-            
-            // Случайный секретный лист (0 .. 4)
             winningLeafIndex = Math.floor(Math.random() * leafAgents.length);
             console.log(`Секретный лист #${winningLeafIndex}`);
             
@@ -409,29 +450,28 @@
             }
             gameActive = true;
             updateUI();
-            showMessage(`Игра начата! 5 листьев, один загадан. Цена первого среза: 100₽.`);
+            showMessage(`Новая игра! Стоимость среза: 100₽. Ищите особый лист.`);
         }
         
-        // ----- ДЕМО-МОНЕТИЗАЦИЯ -----
         function deposit(amount = 100) {
             if (!gameActive) {
-                showMessage("Игра завершена, нажмите «НОВАЯ ИГРА» для перезапуска.", true);
+                showMessage("Игра завершена, нажмите «НОВАЯ».", true);
                 return;
             }
             balance += amount;
             updateUI();
-            showMessage(`Баланс пополнен на ${amount}₽. Текущий баланс: ${Math.floor(balance)}₽`);
+            showMessage(`Баланс пополнен на ${amount}₽. Теперь: ${Math.floor(balance)}₽`);
         }
         
         function withdrawDemo() {
             if (!gameActive && winAmount > 0) {
-                alert(`💰 ДЕМО-ВЫВОД: ${winAmount}₽ успешно переведены на ваш счёт (демо-режим). Спасибо за игру!`);
+                alert(`💸 ДЕМО-ВЫВОД: ${winAmount}₽ переведены на ваш счёт (демо). Спасибо за игру!`);
                 winAmount = 0;
                 gameActive = false;
                 updateUI();
                 showMessage("Вывод выполнен. Начните новую игру.");
             } else {
-                showMessage("Нет доступного выигрыша или игра активна. Сначала выиграйте!", true);
+                showMessage("Нет выигрыша или игра активна. Сначала выиграйте!", true);
             }
         }
         
@@ -439,11 +479,11 @@
             rebuildLeavesAndGame(true);
         }
         
-        // ----- ФИЗИКА РАСТЕНИЯ (СТЕБЕЛЬ, РОСТ, ВЕТЕР) -----
+        // ----- ФИЗИКА РАСТЕНИЯ -----
         const CYCLE_DURATION_MS = 19200;
         function getGrowthAge(nowMs) {
-            const cycleProgress = (nowMs % CYCLE_DURATION_MS) / CYCLE_DURATION_MS;
-            const rad = cycleProgress * Math.PI * 2;
+            const progress = (nowMs % CYCLE_DURATION_MS) / CYCLE_DURATION_MS;
+            const rad = progress * Math.PI * 2;
             return (Math.sin(rad - Math.PI/2) + 1) / 2;
         }
         
@@ -466,7 +506,6 @@
         const SPRING_K = 0.085, DAMP = 0.92, WIND_FORCE = 1.7, GLOBAL_WIND = 1.2;
         function updateLeavesPhysics(age, nowMs, deltaTimeSec) {
             const stemLen = MIN_STEM_LEN + age * MAX_STEM_LEN;
-            // Обновляем growthFactor для живых листьев
             for (let leaf of leafAgents) {
                 if (leaf.removed) continue;
                 let raw = 0;
@@ -491,7 +530,6 @@
                 leaf.windOffsetDeg = Math.min(18, Math.max(-18, leaf.windOffsetDeg));
                 if (leaf.growthFactor < 0.1) { leaf.windOffsetDeg *= 0.98; leaf.windVelDeg *= 0.96; }
             }
-            // Применяем трансформации
             for (let leaf of leafAgents) {
                 if (leaf.removed) continue;
                 const attachY = GROUND_Y - (leaf.fraction * stemLen);
@@ -512,7 +550,7 @@
             }
         }
         
-        // Пыльца (ветер)
+        // Пыльца
         const pollenGroup = document.getElementById("pollenGroup");
         let pollenElements = [];
         function initPollen() {
@@ -554,7 +592,7 @@
         svg.insertBefore(defs, svg.firstChild);
         initPollen();
         
-        // ----- АНИМАЦИОННЫЙ ЦИКЛ -----
+        // ----- АНИМАЦИЯ -----
         let previousTime = performance.now();
         function animate(currentTime) {
             let delta = Math.min(0.033, (currentTime - previousTime) / 1000);
@@ -567,11 +605,11 @@
             requestAnimationFrame(animate);
         }
         
-        // ----- СТАРТ -----
+        // ----- ЗАПУСК -----
         rebuildLeavesAndGame(true);
         depositBtn.addEventListener("click", () => deposit(100));
         withdrawBtn.addEventListener("click", withdrawDemo);
-        resetBtn.addEventListener("click", () => fullReset());
+        resetBtn.addEventListener("click", fullReset);
         updateUI();
         previousTime = performance.now();
         requestAnimationFrame(animate);
