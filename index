@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <title>5 листьев: найди секретный | Telegram Mini Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: linear-gradient(145deg, #c8e8bf 0%, #b2d8a8 100%);
+            font-family: 'Segoe UI', 'Quicksand', system-ui, -apple-system, 'Poppins', sans-serif;
+            padding: 12px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Контейнер с отступами под динамическую область */
+        .game-wrapper {
+            width: 100%;
+            max-width: 550px;
+            margin: 0 auto;
+            position: relative;
+            background: rgba(40, 28, 12, 0.2);
+            border-radius: 32px;
+            backdrop-filter: blur(2px);
+            padding: 16px 16px 20px 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        /* Игровая панель (верхняя) – адаптивная, не перекрывает контент */
+        .game-panel {
+            background: #1a2a0cee;
+            backdrop-filter: blur(10px);
+            border-radius: 48px;
+            padding: 10px 16px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 18px;
+            border: 1px solid #e9ffb0;
+            box-shadow: 0 5px 12px rgba(0,0,0,0.2);
+        }
+
+        .stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            background: #00000050;
+            padding: 6px 12px;
+            border-radius: 40px;
+            backdrop-filter: blur(4px);
+        }
+
+        .stat {
+            color: #fdf7cf;
+            font-family: monospace;
+            font-size: 0.85rem;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+
+        .stat span:first-child {
+            font-size: 0.7rem;
+            opacity: 0.9;
+        }
+
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: 800;
+            background: #2f4a1d;
+            padding: 2px 10px;
+            border-radius: 32px;
+            color: #fff3b7;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .game-btn {
+            background: #f9e7a3;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-weight: bold;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: 0.1s linear;
+            color: #2c461c;
+            box-shadow: 0 1px 3px black;
+        }
+
+        .game-btn:active {
+            transform: scale(0.97);
+        }
+
+        .game-btn.special {
+            background: #ffd966;
+            color: #2a521a;
+        }
+
+        .message-area {
+            background: #2b3b1bd9;
+            border-radius: 32px;
+            padding: 8px 14px;
+            font-size: 0.7rem;
+            color: #fffeca;
+            backdrop-filter: blur(4px);
+            flex: 1;
+            min-width: 130px;
+            text-align: center;
+        }
+
+        /* SVG – адаптивный, максимальная ширина, высота авто */
+        .svg-container {
+            text-align: center;
+            margin: 12px 0 8px;
+        }
+
+        svg {
+            max-width: 100%;
+            height: auto;
+            display: inline-block;
+            border-radius: 28px;
+            background: radial-gradient(circle at 30% 20%, #eafbcf, #b9dc9a);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            cursor: pointer;
+            width: 100%;
+            touch-action: manipulation;
+        }
+
+        /* Нижняя панель информации */
+        .info-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-top: 14px;
+            gap: 8px;
+            flex-wrap: wrap;
+            background: #2a3b1fe0;
+            backdrop-filter: blur(8px);
+            padding: 8px 16px;
+            border-radius: 40px;
+            color: #f9f2cf;
+            font-size: 0.7rem;
+        }
+
+        .title {
+            font-weight: 700;
+            background: #fef7cf30;
+            padding: 4px 12px;
+            border-radius: 40px;
+        }
+
+        .badge {
+            font-family: monospace;
+            background: #1c2a0e;
+            padding: 4px 10px;
+            border-radius: 32px;
+        }
+
+        footer {
+            font-size: 0.6rem;
+            text-align: center;
+            margin-top: 12px;
+            color: #2a401d;
+            font-weight: 500;
+        }
+
+        /* Листья – увеличиваем зону клика для мобильных */
+        .leaf-unit {
+            cursor: pointer;
+            transition: filter 0.1s ease;
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.2));
+            touch-action: manipulation;
+        }
+        .leaf-unit:active {
+            filter: drop-shadow(0 0 8px #ffffb0);
+            transform: scale(0.98);
+        }
+
+        /* Медиа-запросы для очень маленьких экранов (ширина до 480px) */
+        @media (max-width: 520px) {
+            .game-wrapper {
+                padding: 12px;
+            }
+            .game-panel {
+                padding: 8px 12px;
+            }
+            .stat-value {
+                font-size: 1rem;
+                min-width: 50px;
+            }
+            .game-btn {
+                padding: 5px 10px;
+                font-size: 0.7rem;
+            }
+            .message-area {
+                font-size: 0.65rem;
+                padding: 6px 10px;
+            }
+            .info-panel {
+                font-size: 0.65rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="game-wrapper">
+    <!-- Верхняя панель с балансом и кнопками -->
+    <div class="game-panel">
+        <div class="stats">
+            <div class="stat">💰 <span>БАЛАНС</span> <span class="stat-value" id="balanceValue">100</span> ₽</div>
+            <div class="stat">✂️ <span>ЦЕНА</span> <span class="stat-value" id="currentPrice">100</span> ₽</div>
+            <div class="stat">🏆 <span>ВЫИГРЫШ</span> <span class="stat-value" id="winningAmount">0</span> ₽</div>
+        </div>
+        <div class="buttons">
+            <button class="game-btn" id="depositBtn">➕ ПОПОЛНИТЬ 100₽</button>
+            <button class="game-btn special" id="withdrawBtn" disabled>💸 ВЫВЕСТИ</button>
+            <button class="game-btn" id="resetGameBtn">🔄 НОВАЯ</button>
+        </div>
+        <div class="message-area" id="gameMessage">
+            🌿 Найди особый лист! Цена падает после промаха.
+        </div>
+    </div>
+
+    <!-- SVG контейнер -->
+    <div class="svg-container">
+        <svg id="plantSvg" viewBox="0 0 700 550" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+            <rect x="0" y="520" width="700" height="30" fill="#7d5d3a" opacity="0.35" rx="12" />
+            <ellipse cx="350" cy="518" rx="130" ry="12" fill="#4f3a1f" opacity="0.4" />
+            <g id="stemGroup">
+                <line id="stemLine" x1="350" y1="525" x2="350" y2="525" stroke="#3f6b2f" stroke-width="7" stroke-linecap="round" />
+                <line id="stemHighlight" x1="348" y1="525" x2="348" y2="525" stroke="#87b96a" stroke-width="2" stroke-linecap="round" opacity="0.5" />
+            </g>
+            <g id="leavesContainer"></g>
+            <g id="pollenGroup" opacity="0.7"></g>
+        </svg>
+    </div>
+
+    <div class="info-panel">
+        <span class="title">🌿 5 ЛИСТЬЕВ · НАЙДИ СЕКРЕТНЫЙ</span>
+        <span class="badge">🍃 ветер + рост | х2 при победе</span>
+    </div>
+    <footer>💡 Клик по листу = срез. Цена падает после ошибки. Угадал → выигрыш = цена×2.</footer>
+</div>
+
+<script>
+    (function() {
+        // ----------------------------- ИНИЦИАЛИЗАЦИЯ -----------------------------
+        const SVG_NS = "http://www.w3.org/2000/svg";
+        const svg = document.getElementById("plantSvg");
+        let leavesContainer = document.getElementById("leavesContainer");
+        const stemLine = document.getElementById("stemLine");
+        const stemHighlight = document.getElementById("stemHighlight");
+
+        const GROUND_Y = 525;
+        const BASE_X = 350;
+        const MIN_STEM_LEN = 15;
+        const MAX_STEM_LEN = 280;
+
+        // ----- ИГРОВЫЕ ПАРАМЕТРЫ -----
+        let balance = 100;
+        let currentCutPrice = 100;
+        let winAmount = 0;
+        let gameActive = true;
+        let winningLeafIndex = -1;
+        let leafAgents = [];
+        
+        // DOM
+        const balanceSpan = document.getElementById("balanceValue");
+        const priceSpan = document.getElementById("currentPrice");
+        const winSpan = document.getElementById("winningAmount");
+        const withdrawBtn = document.getElementById("withdrawBtn");
+        const depositBtn = document.getElementById("depositBtn");
+        const resetBtn = document.getElementById("resetGameBtn");
+        const gameMsgDiv = document.getElementById("gameMessage");
+
+        const MIN_PRICE = 10;
+        
+        // ----- 5 ЛИСТЬЕВ (конфигурация) -----
+        const LEAVES_CONFIG = [
+            { fraction: 0.18, sideSign: 1,  baseAngleDeg: 28, variation: 4 },
+            { fraction: 0.36, sideSign: -1, baseAngleDeg: 32, variation: -6 },
+            { fraction: 0.55, sideSign: 1,  baseAngleDeg: 34, variation: 5 },
+            { fraction: 0.74, sideSign: -1, baseAngleDeg: 30, variation: -8 },
+            { fraction: 0.92, sideSign: 1,  baseAngleDeg: 25, variation: 3 }
+        ];
+
+        // ----- КЛАСС ЛИСТА -----
+        class LeafAgent {
+            constructor(idx, config) {
+                this.idx = idx;
+                this.fraction = config.fraction;
+                this.fullBaseAngle = config.sideSign * (config.baseAngleDeg + config.variation);
+                this.emergeStart = 0.1 + (idx * 0.07);
+                this.emergeEnd = this.emergeStart + 0.32;
+                this.emergeStart = Math.min(this.emergeStart, 0.68);
+                this.emergeEnd = Math.min(this.emergeEnd, 0.98);
+                this.windOffsetDeg = 0;
+                this.windVelDeg = 0;
+                this.group = null;
+                this.leafPath = null;
+                this.veinElem = null;
+                this.growthFactor = 0;
+                this.removed = false;
+            }
+            
+            createLeafElement() {
+                const group = document.createElementNS(SVG_NS, "g");
+                const path = document.createElementNS(SVG_NS, "path");
+                path.setAttribute("d", "M0,0 C12,-18 32,-22 44,-12 C52,-4 52,8 44,14 C32,24 12,20 0,0 Z");
+                path.setAttribute("fill", "#73b33b");
+                path.setAttribute("stroke", "#3c791a");
+                path.setAttribute("stroke-width", "1");
+                path.setAttribute("stroke-linejoin", "round");
+                const vein = document.createElementNS(SVG_NS, "path");
+                vein.setAttribute("d", "M4,0 Q22,-6 38,-4 M4,2 Q22,8 40,6");
+                vein.setAttribute("stroke", "#b2e06e");
+                vein.setAttribute("stroke-width", "1.2");
+                vein.setAttribute("fill", "none");
+                vein.setAttribute("opacity", "0.7");
+                group.appendChild(path);
+                group.appendChild(vein);
+                group.setAttribute("class", "leaf-unit");
+                group.style.cursor = "pointer";
+                group.style.pointerEvents = "bounding-box";
+                this.group = group;
+                this.leafPath = path;
+                this.veinElem = vein;
+                return group;
+            }
+        }
+        
+        function updateUI() {
+            balanceSpan.textContent = Math.floor(balance);
+            priceSpan.textContent = currentCutPrice;
+            winSpan.textContent = winAmount;
+            withdrawBtn.disabled = !(!gameActive && winAmount > 0);
+        }
+        
+        function showMessage(text, isError = false) {
+            gameMsgDiv.innerHTML = isError ? `⚠️ ${text}` : `🌿 ${text}`;
+            setTimeout(() => {
+                if (gameMsgDiv.innerHTML.includes(text)) {
+                    if(gameActive) gameMsgDiv.innerHTML = "🍃 5 листьев. Кликни на лист — угадай главный! Цена падает при промахе.";
+                    else if(!gameActive && winAmount>0) gameMsgDiv.innerHTML = "🏆 ПОБЕДА! Нажми «ВЫВЕСТИ» для получения приза.";
+                    else gameMsgDiv.innerHTML = "🌿 Игра завершена. Нажми «НОВАЯ».";
+                }
+            }, 1800);
+        }
+        
+        // ----- ОБРАБОТКА КЛИКА ПО ЛИСТУ -----
+        function handleLeafCut(leaf) {
+            if (!gameActive) {
+                showMessage("Игра завершена. Начните новую!", true);
+                return;
+            }
+            if (leaf.removed) {
+                showMessage("Этот лист уже срезан!", true);
+                return;
+            }
+            if (balance < currentCutPrice) {
+                showMessage(`Не хватает денег! Нужно ${currentCutPrice}₽, пополните баланс.`, true);
+                return;
+            }
+            
+            const isWinning = (leaf.idx === winningLeafIndex);
+            balance -= currentCutPrice;
+            
+            if (isWinning) {
+                const prize = currentCutPrice * 2;
+                winAmount = prize;
+                gameActive = false;
+                updateUI();
+                showMessage(`✨ ПОБЕДА! Вы срезали секретный лист! Выигрыш: ${prize}₽ доступен к выводу. ✨`);
+                if (leaf.group && leaf.group.parentNode) {
+                    leaf.group.style.transition = "transform 0.1s ease, opacity 0.15s";
+                    leaf.group.style.opacity = "0";
+                    leaf.group.style.transform = "scale(0.1) rotate(-20deg)";
+                    setTimeout(() => { if(leaf.group && leaf.group.parentNode) leaf.group.remove(); }, 120);
+                }
+                leaf.removed = true;
+                updateUI();
+                return;
+            } 
+            
+            // Неверный лист
+            leaf.removed = true;
+            if (leaf.group && leaf.group.parentNode) {
+                leaf.group.style.transition = "transform 0.08s ease, opacity 0.12s";
+                leaf.group.style.opacity = "0";
+                leaf.group.style.transform = "scale(0.3) rotate(-10deg)";
+                setTimeout(() => { if(leaf.group && leaf.group.parentNode) leaf.group.remove(); }, 100);
+            }
+            
+            let newPrice = currentCutPrice - 10;
+            if (newPrice < MIN_PRICE) newPrice = MIN_PRICE;
+            currentCutPrice = newPrice;
+            updateUI();
+            showMessage(`Не угадал! Цена снижена до ${currentCutPrice}₽. Осталось: ${Math.floor(balance)}₽`);
+            
+            const aliveLeaves = leafAgents.filter(l => !l.removed);
+            if (aliveLeaves.length === 0 && gameActive) {
+                showMessage("Листья кончились, а секретный так и не найден :( Начните новую игру.", true);
+                gameActive = false;
+                updateUI();
+            }
+        }
+        
+        // ----- ПЕРЕСОЗДАНИЕ ЛИСТЬЕВ -----
+        function rebuildLeavesAndGame(resetBalanceAndPrice = true) {
+            while (leavesContainer.firstChild) leavesContainer.removeChild(leavesContainer.firstChild);
+            const newAgents = [];
+            for (let i = 0; i < LEAVES_CONFIG.length; i++) {
+                const agent = new LeafAgent(i, LEAVES_CONFIG[i]);
+                const leafGroup = agent.createLeafElement();
+                leafGroup.addEventListener("click", (event) => {
+                    event.stopPropagation();
+                    handleLeafCut(agent);
+                });
+                leavesContainer.appendChild(leafGroup);
+                newAgents.push(agent);
+            }
+            leafAgents = newAgents;
+            winningLeafIndex = Math.floor(Math.random() * leafAgents.length);
+            console.log(`Секретный лист #${winningLeafIndex}`);
+            
+            if (resetBalanceAndPrice) {
+                balance = 100;
+                currentCutPrice = 100;
+                winAmount = 0;
+            }
+            gameActive = true;
+            updateUI();
+            showMessage(`Новая игра! Стоимость среза: 100₽. Ищите особый лист.`);
+        }
+        
+        function deposit(amount = 100) {
+            if (!gameActive) {
+                showMessage("Игра завершена, нажмите «НОВАЯ».", true);
+                return;
+            }
+            balance += amount;
+            updateUI();
+            showMessage(`Баланс пополнен на ${amount}₽. Теперь: ${Math.floor(balance)}₽`);
+        }
+        
+        function withdrawDemo() {
+            if (!gameActive && winAmount > 0) {
+                alert(`💸 ДЕМО-ВЫВОД: ${winAmount}₽ переведены на ваш счёт (демо). Спасибо за игру!`);
+                winAmount = 0;
+                gameActive = false;
+                updateUI();
+                showMessage("Вывод выполнен. Начните новую игру.");
+            } else {
+                showMessage("Нет выигрыша или игра активна. Сначала выиграйте!", true);
+            }
+        }
+        
+        function fullReset() {
+            rebuildLeavesAndGame(true);
+        }
+        
+        // ----- ФИЗИКА РАСТЕНИЯ -----
+        const CYCLE_DURATION_MS = 19200;
+        function getGrowthAge(nowMs) {
+            const progress = (nowMs % CYCLE_DURATION_MS) / CYCLE_DURATION_MS;
+            const rad = progress * Math.PI * 2;
+            return (Math.sin(rad - Math.PI/2) + 1) / 2;
+        }
+        
+        function updateStem(age) {
+            const stemLen = MIN_STEM_LEN + age * MAX_STEM_LEN;
+            const yTop = GROUND_Y - stemLen;
+            stemLine.setAttribute("x1", BASE_X);
+            stemLine.setAttribute("y1", GROUND_Y);
+            stemLine.setAttribute("x2", BASE_X);
+            stemLine.setAttribute("y2", yTop);
+            stemHighlight.setAttribute("x1", BASE_X - 1.5);
+            stemHighlight.setAttribute("y1", GROUND_Y);
+            stemHighlight.setAttribute("x2", BASE_X - 1.5);
+            stemHighlight.setAttribute("y2", yTop);
+            const thick = 5 + age * 3.5;
+            stemLine.setAttribute("stroke-width", thick);
+            stemHighlight.setAttribute("stroke-width", Math.max(1.5, thick * 0.3));
+        }
+        
+        const SPRING_K = 0.085, DAMP = 0.92, WIND_FORCE = 1.7, GLOBAL_WIND = 1.2;
+        function updateLeavesPhysics(age, nowMs, deltaTimeSec) {
+            const stemLen = MIN_STEM_LEN + age * MAX_STEM_LEN;
+            for (let leaf of leafAgents) {
+                if (leaf.removed) continue;
+                let raw = 0;
+                if (age <= leaf.emergeStart) raw = 0;
+                else if (age >= leaf.emergeEnd) raw = 1;
+                else raw = (age - leaf.emergeStart) / (leaf.emergeEnd - leaf.emergeStart);
+                leaf.growthFactor = Math.min(1, Math.max(0, Math.pow(raw, 1.2)));
+            }
+            const globalWindPhase = nowMs * 0.0065;
+            const globalTorque = Math.sin(globalWindPhase) * GLOBAL_WIND * 0.9 + Math.sin(globalWindPhase * 1.73) * 0.55;
+            for (let leaf of leafAgents) {
+                if (leaf.removed) continue;
+                let windInfl = Math.min(1.0, leaf.growthFactor + 0.2);
+                const seed = leaf.idx * 12.345;
+                const gust = (Math.sin(nowMs * 0.0097 + seed) * 0.8 + Math.cos(nowMs * 0.0132 + seed*1.2)*0.6 + Math.sin(nowMs*0.024+seed*0.7)*0.5) * WIND_FORCE;
+                const torque = (gust + globalTorque * 1.1) * windInfl;
+                const springAcc = -SPRING_K * leaf.windOffsetDeg;
+                let dt = Math.min(deltaTimeSec, 0.033);
+                leaf.windVelDeg += (springAcc + torque) * dt * 12;
+                leaf.windVelDeg *= DAMP;
+                leaf.windOffsetDeg += leaf.windVelDeg * dt;
+                leaf.windOffsetDeg = Math.min(18, Math.max(-18, leaf.windOffsetDeg));
+                if (leaf.growthFactor < 0.1) { leaf.windOffsetDeg *= 0.98; leaf.windVelDeg *= 0.96; }
+            }
+            for (let leaf of leafAgents) {
+                if (leaf.removed) continue;
+                const attachY = GROUND_Y - (leaf.fraction * stemLen);
+                const angleBase = leaf.fullBaseAngle * leaf.growthFactor;
+                const finalAngle = angleBase + leaf.windOffsetDeg;
+                let scaleVal = 0.25 + leaf.growthFactor * 0.85;
+                if (leaf.growthFactor < 0.4) scaleVal *= (0.6 + leaf.growthFactor);
+                scaleVal = Math.min(1, Math.max(0.08, scaleVal));
+                let opacity = 0.2 + leaf.growthFactor * 0.85;
+                opacity = Math.min(0.98, opacity);
+                leaf.group.setAttribute("transform", `translate(${BASE_X}, ${attachY}) rotate(${finalAngle}) scale(${scaleVal})`);
+                leaf.group.setAttribute("opacity", opacity);
+                if (leaf.leafPath) {
+                    const green = `rgb(${70 + leaf.growthFactor*55}, ${130 + leaf.growthFactor*70}, ${55 + leaf.growthFactor*40})`;
+                    leaf.leafPath.setAttribute("fill", green);
+                }
+                if (leaf.veinElem && leaf.growthFactor > 0.1) leaf.veinElem.setAttribute("opacity", 0.4 + leaf.growthFactor*0.5);
+            }
+        }
+        
+        // Пыльца
+        const pollenGroup = document.getElementById("pollenGroup");
+        let pollenElements = [];
+        function initPollen() {
+            for (let i=0;i<24;i++) {
+                const circ = document.createElementNS(SVG_NS, "circle");
+                circ.setAttribute("r", 1.5+Math.random()*2.5);
+                circ.setAttribute("fill", `rgba(255,240,150,${0.4+Math.random()*0.5})`);
+                circ.setAttribute("filter", "url(#glow)");
+                pollenGroup.appendChild(circ);
+                pollenElements.push({el:circ, x:Math.random()*700, y:Math.random()*450, speedX:(Math.random()-0.5)*0.8, speedY:(Math.random()-0.5)*0.5+0.2});
+            }
+        }
+        function updatePollen(nowMs, deltaSec) {
+            for (let p of pollenElements) {
+                const windX = Math.sin(nowMs*0.005 + p.y*0.02)*1.6;
+                const windY = Math.cos(nowMs*0.007 + p.x*0.01)*0.8;
+                p.speedX = p.speedX*0.99 + (windX*0.05 + (Math.random()-0.5)*0.25)*deltaSec*6;
+                p.speedY = p.speedY*0.98 + (windY*0.08 + (Math.random()-0.5)*0.2)*deltaSec*5;
+                p.speedX = Math.min(2.2, Math.max(-2.2, p.speedX));
+                p.speedY = Math.min(1.4, Math.max(-1.2, p.speedY));
+                p.x += p.speedX * deltaSec * 28;
+                p.y += p.speedY * deltaSec * 24;
+                if (p.x > 710) p.x = -10;
+                if (p.x < -20) p.x = 710;
+                if (p.y > 570) p.y = 40;
+                if (p.y < 30) p.y = 560;
+                p.el.setAttribute("cx", p.x);
+                p.el.setAttribute("cy", p.y);
+                p.el.setAttribute("opacity", 0.4+Math.sin(nowMs*0.012+p.x)*0.2);
+            }
+        }
+        
+        // Фильтр свечения
+        const defs = document.createElementNS(SVG_NS, "defs");
+        const filter = document.createElementNS(SVG_NS, "filter");
+        filter.setAttribute("id", "glow");
+        filter.appendChild(document.createElementNS(SVG_NS, "feGaussianBlur")).setAttribute("stdDeviation","1.2");
+        defs.appendChild(filter);
+        svg.insertBefore(defs, svg.firstChild);
+        initPollen();
+        
+        // ----- АНИМАЦИЯ -----
+        let previousTime = performance.now();
+        function animate(currentTime) {
+            let delta = Math.min(0.033, (currentTime - previousTime) / 1000);
+            if (delta <= 0) delta = 0.016;
+            previousTime = currentTime;
+            const age = getGrowthAge(currentTime);
+            updateStem(age);
+            updateLeavesPhysics(age, currentTime, delta);
+            updatePollen(currentTime, delta);
+            requestAnimationFrame(animate);
+        }
+        
+        // ----- ЗАПУСК -----
+        rebuildLeavesAndGame(true);
+        depositBtn.addEventListener("click", () => deposit(100));
+        withdrawBtn.addEventListener("click", withdrawDemo);
+        resetBtn.addEventListener("click", fullReset);
+        updateUI();
+        previousTime = performance.now();
+        requestAnimationFrame(animate);
+    })();
+</script>
+</body>
+</html>
